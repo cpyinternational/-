@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fun Math Garden - Multi-Device</title>
+    <style>
+        /* Kid-friendly theme with responsive layout */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #e0f7fa;
+            /* Prevent bouncing on some mobile browsers */
+            overflow: hidden;
+        }
+
+        .container {
+            background: white;
+            padding: 5% 30px; /* Responsive padding */
+            border-radius: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            /* Responsive width: 90% on tablets, max 500px on PC */
+            width: 90%;
+            max-width: 500px;
+            border: 8px solid #81d4fa;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            color: #0288d1;
+            font-size: clamp(20px, 5vw, 28px); /* Fluid font size */
+            margin-bottom: 20px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 18px; /* Increased for iPad touch targets */
+            margin: 12px 0;
+            font-size: clamp(16px, 4vw, 20px);
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 50px;
+            background-color: #ffb74d;
+            color: white;
+            box-shadow: 0 4px #fb8c00;
+            transition: all 0.2s;
+            /* Better touch response */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #fb8c00;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: clamp(14px, 3.5vw, 18px);
+            color: #546e7a;
+            background: #f1f8e9;
+            padding: 10px 15px;
+            border-radius: 20px;
+        }
+
+        .question-box {
+            font-size: clamp(36px, 10vw, 56px); /* Scales with screen size */
+            margin: 20px 0;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        
+        /* Remove number input arrows */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+            width: 70%;
+            padding: 12px;
+            font-size: clamp(24px, 6vw, 32px);
+            text-align: center;
+            border: 4px solid #b3e5fc;
+            border-radius: 20px;
+            outline: none;
+            color: #0277bd;
+            margin-bottom: 15px;
+            background-color: #fff;
+        }
+
+        .feedback {
+            font-size: clamp(14px, 4vw, 18px);
+            font-weight: bold;
+            min-height: 25px;
+            margin-bottom: 10px;
+        }
+        .error-msg { color: #e53935; }
+        .success-msg { color: #43a047; }
+
+        .btn-return {
+            background-color: #90a4ae;
+            box-shadow: 0 4px #607d8b;
+            margin-top: 20px;
+        }
+
+        /* Adjustments for landscape tablets or smaller PCs */
+        @media (max-height: 500px) {
+            .container { padding: 10px 30px; }
+            .question-box { margin: 10px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="menu-view" class="container">
+        <h2>🌈 数学小乐园 🌟</h2>
+        <button style="background-color: #81c784; box-shadow: 0 4px #66bb6a;" onclick="startQuiz('add-1')">一位数加法 🍎</button>
+        <button style="background-color: #4fc3f7; box-shadow: 0 4px #29b6f6;" onclick="startQuiz('sub-20')">20以内减法 🍬</button>
+        <button style="background-color: #ba68c8; box-shadow: 0 4px #ab47bc;" onclick="startQuiz('add-2')">两位数加法 🚀</button>
+        <button style="background-color: #ef5350; box-shadow: 0 4px #e53935;" onclick="startQuiz('sub-2')">两位数减法 🦁</button>
+    </div>
+
+    <div id="quiz-view" class="container" style="display: none;">
+        <div class="quiz-header">
+            <span>⏱️ 计时: <span id="timer-display">00:00</span></span>
+            <span>⭐ 分数: <span id="score-display">0</span> / <span id="total-display">0</span></span>
+        </div>
+        
+        <div id="question-display" class="question-box"></div>
+        <div id="feedback-display" class="feedback"></div>
+        
+        <input type="number" id="answer-input" placeholder="?" onkeydown="handleEnter(event)" inputmode="numeric">
+        
+        <button onclick="checkAnswer()">检查答案 ✅</button>
+        <button class="btn-return" onclick="returnToMenu()">返回 🏠</button>
+    </div>
+
+    <script>
+        // Game Logic Variables
+        let currentMode = '';
+        let timerInterval;
+        let secondsElapsed = 0;
+        let correctFirstTryCount = 0;
+        let totalCompletedCount = 0;
+        let expectedAnswer = 0;
+        let isFirstAttempt = true;
+
+        // Formats seconds into MM:SS
+        function formatTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function startQuiz(mode) {
+            currentMode = mode;
+            secondsElapsed = 0;
+            correctFirstTryCount = 0;
+            totalCompletedCount = 0;
+            
+            updateStatsUI();
+            
+            document.getElementById('menu-view').style.display = 'none';
+            document.getElementById('quiz-view').style.display = 'block';
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                document.getElementById('timer-display').innerText = formatTime(secondsElapsed);
+            }, 1000);
+
+            generateNextQuestion();
+        }
+
+        function generateNextQuestion() {
+            isFirstAttempt = true;
+            let num1, num2;
+
+            switch (currentMode) {
+                case 'add-1':
+                    num1 = getRandomInt(1, 9);
+                    num2 = getRandomInt(1, 9);
+                    expectedAnswer = num1 + num2;
+                    displayQuestion(`${num1} + ${num2}`);
+                    break;
+                case 'sub-20':
+                    num1 = getRandomInt(1, 20);
+                    // Result constraint: must be 0-9
+                    let minNum2 = Math.max(0, num1 - 9);
+                    num2 = getRandomInt(minNum2, num1);
+                    expectedAnswer = num1 - num2;
+                    displayQuestion(`${num1} - ${num2}`);
+                    break;
+                case 'add-2':
+                    num1 = getRandomInt(10, 99);
+                    num2 = getRandomInt(10, 99);
+                    expectedAnswer = num1 + num2;
+                    displayQuestion(`${num1} + ${num2}`);
+                    break;
+                case 'sub-2':
+                    num1 = getRandomInt(10, 99);
+                    num2 = getRandomInt(10, num1);
+                    expectedAnswer = num1 - num2;
+                    displayQuestion(`${num1} - ${num2}`);
+                    break;
+            }
+
+            document.getElementById('answer-input').value = '';
+            document.getElementById('feedback-display').innerText = '';
+            
+            // Auto-focus logic with a tiny delay for mobile keyboards
+            setTimeout(() => document.getElementById('answer-input').focus(), 100);
+        }
+
+        function checkAnswer() {
+            const inputField = document.getElementById('answer-input');
+            const feedbackField = document.getElementById('feedback-display');
+            const userAnswer = parseInt(inputField.value, 10);
+
+            if (isNaN(userAnswer)) return;
+
+            if (userAnswer === expectedAnswer) {
+                totalCompletedCount++;
+                if (isFirstAttempt) correctFirstTryCount++;
+                
+                feedbackField.className = "feedback success-msg";
+                feedbackField.innerText = "太棒了！🎉";
+                
+                // Block UI briefly then next
+                setTimeout(generateNextQuestion, 600);
+                updateStatsUI();
+            } else {
+                isFirstAttempt = false;
+                feedbackField.className = "feedback error-msg";
+                feedbackField.innerText = "不对哦，再试一次吧！💪";
+                inputField.value = '';
+                inputField.focus();
+            }
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                // Blur to hide keyboard on mobile if desired, 
+                // but usually better to keep focus for next question.
+                checkAnswer();
+            }
+        }
+
+        function updateStatsUI() {
+            document.getElementById('score-display').innerText = correctFirstTryCount;
+            document.getElementById('total-display').innerText = totalCompletedCount;
+            document.getElementById('timer-display').innerText = formatTime(secondsElapsed);
+        }
+
+        function returnToMenu() {
+            if (confirm("确定要退出练习吗？")) {
+                clearInterval(timerInterval);
+                document.getElementById('menu-view').style.display = 'block';
+                document.getElementById('quiz-view').style.display = 'none';
+            }
+        }
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function displayQuestion(text) {
+            document.getElementById('question-display').innerText = text + " = ?";
+        }
+    </script>
+</body>
+</html>
