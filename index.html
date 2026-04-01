@@ -25,7 +25,7 @@
             min-height: 100vh;
             margin: 0;
             background-color: var(--soft-blue);
-            overflow: hidden; /* Prevent scrolling */
+            overflow: hidden; 
             touch-action: manipulation;
         }
 
@@ -45,9 +45,9 @@
         .menu-btn {
             display: block;
             width: 100%;
-            padding: 18px;
-            margin: 15px 0;
-            font-size: 22px;
+            padding: 16px;
+            margin: 12px 0;
+            font-size: 20px;
             font-weight: bold;
             border: none;
             border-radius: 50px;
@@ -61,7 +61,7 @@
         .quiz-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-size: 18px;
             color: #546e7a;
             background: #f1f8e9;
@@ -70,7 +70,7 @@
         }
 
         .question-box {
-            font-size: 56px;
+            font-size: clamp(40px, 10vw, 56px);
             margin: 15px 0;
             color: #2e7d32;
             font-weight: bold;
@@ -92,20 +92,20 @@
             font-size: 18px;
             font-weight: bold;
             height: 25px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         /* --- Custom Keypad Styles --- */
         .keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 10px;
+            gap: 10px;
+            margin-top: 5px;
         }
 
         .key {
-            padding: 20px;
-            font-size: 28px;
+            padding: 18px;
+            font-size: 26px;
             font-weight: bold;
             background: #f5f5f5;
             border: none;
@@ -119,25 +119,17 @@
             box-shadow: 0 1px #ddd;
             background: #e0e0e0;
         }
-        .key.action {
-            background: var(--btn-orange);
-            color: white;
-            box-shadow: 0 4px var(--btn-shadow);
-        }
-        .key.confirm {
-            background: #81c784;
-            color: white;
-            box-shadow: 0 4px #66bb6a;
-        }
+        .key.action { background: var(--btn-orange); color: white; box-shadow: 0 4px var(--btn-shadow); }
+        .key.confirm { background: #81c784; color: white; box-shadow: 0 4px #66bb6a; }
 
         .btn-exit {
-            margin-top: 15px;
+            margin-top: 10px;
             background: #90a4ae;
-            padding: 10px;
+            padding: 8px;
             border-radius: 20px;
             color: white;
             border: none;
-            width: 100px;
+            width: 90px;
             font-size: 14px;
         }
     </style>
@@ -145,9 +137,10 @@
 <body>
 
     <div id="menu-view" class="container">
-        <h2 style="color:var(--primary-blue)">🌈 数学小乐园 🌟</h2>
+        <h2 style="color:var(--primary-blue); margin-top:0;">🌈 数学小乐园 🌟</h2>
         <button class="menu-btn" style="background:#81c784; box-shadow:0 5px #66bb6a;" onclick="startQuiz('add-1')">一位数加法 🍎</button>
         <button class="menu-btn" style="background:#4fc3f7; box-shadow:0 5px #29b6f6;" onclick="startQuiz('sub-20')">20以内减法 🍬</button>
+        <button class="menu-btn" style="background:#ffa726; box-shadow:0 5px #fb8c00;" onclick="startQuiz('mixed-2')">两位数加减混合 🍀</button>
         <button class="menu-btn" style="background:#ba68c8; box-shadow:0 5px #ab47bc;" onclick="startQuiz('add-2')">两位数加法 🚀</button>
         <button class="menu-btn" style="background:#ef5350; box-shadow:0 5px #e53935;" onclick="startQuiz('sub-2')">两位数减法 🦁</button>
     </div>
@@ -160,7 +153,6 @@
         
         <div id="question-display" class="question-box"></div>
         <div id="feedback-display" class="feedback"></div>
-        
         <div id="answer-box" class="answer-display"></div>
 
         <div class="keypad">
@@ -203,16 +195,13 @@
             correctFirstTryCount = 0;
             totalCompletedCount = 0;
             updateStatsUI();
-            
             document.getElementById('menu-view').style.display = 'none';
             document.getElementById('quiz-view').style.display = 'block';
-            
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 secondsElapsed++;
                 document.getElementById('timer-display').innerText = formatTime(secondsElapsed);
             }, 1000);
-
             generateNextQuestion();
         }
 
@@ -222,44 +211,46 @@
             updateAnswerBox();
             let num1, num2;
 
-            switch (currentMode) {
-                case 'add-1':
-                    num1 = getRandomInt(1, 9);
-                    num2 = getRandomInt(1, 9);
-                    expectedAnswer = num1 + num2;
-                    displayQuestion(`${num1} + ${num2}`);
-                    break;
-                case 'sub-20':
-                    num1 = getRandomInt(1, 20);
-                    let minNum2 = Math.max(0, num1 - 9);
-                    num2 = getRandomInt(minNum2, num1);
-                    expectedAnswer = num1 - num2;
-                    displayQuestion(`${num1} - ${num2}`);
-                    break;
-                case 'add-2':
-                    num1 = getRandomInt(10, 99);
-                    num2 = getRandomInt(10, 99);
-                    expectedAnswer = num1 + num2;
-                    displayQuestion(`${num1} + ${num2}`);
-                    break;
-                case 'sub-2':
-                    num1 = getRandomInt(10, 99);
-                    num2 = getRandomInt(10, num1);
-                    expectedAnswer = num1 - num2;
-                    displayQuestion(`${num1} - ${num2}`);
-                    break;
+            // Helper to handle logic based on mode
+            const getLogic = (mode) => {
+                let n1, n2, ans, txt;
+                if (mode === 'add-1') {
+                    n1 = getRandomInt(1, 9); n2 = getRandomInt(1, 9);
+                    ans = n1 + n2; txt = `${n1} + ${n2}`;
+                } else if (mode === 'sub-20') {
+                    n1 = getRandomInt(1, 20);
+                    let minN2 = Math.max(0, n1 - 9);
+                    n2 = getRandomInt(minN2, n1);
+                    ans = n1 - n2; txt = `${n1} - ${n2}`;
+                } else if (mode === 'add-2') {
+                    n1 = getRandomInt(10, 99); n2 = getRandomInt(10, 99);
+                    ans = n1 + n2; txt = `${n1} + ${n2}`;
+                } else if (mode === 'sub-2') {
+                    n1 = getRandomInt(10, 99); n2 = getRandomInt(10, n1);
+                    ans = n1 - n2; txt = `${n1} - ${n2}`;
+                }
+                return {ans, txt};
+            };
+
+            if (currentMode === 'mixed-2') {
+                // Randomly choose between add-2 and sub-2
+                const subMode = Math.random() < 0.5 ? 'add-2' : 'sub-2';
+                const result = getLogic(subMode);
+                expectedAnswer = result.ans;
+                displayQuestion(result.txt);
+            } else {
+                const result = getLogic(currentMode);
+                expectedAnswer = result.ans;
+                displayQuestion(result.txt);
             }
             document.getElementById('feedback-display').innerText = '';
         }
 
-        // Keypad Logic
         function pressKey(val) {
             if (val === 'DEL') {
                 currentInput = currentInput.slice(0, -1);
             } else {
-                if (currentInput.length < 3) { // Limit to 3 digits
-                    currentInput += val;
-                }
+                if (currentInput.length < 3) currentInput += val;
             }
             updateAnswerBox();
         }
