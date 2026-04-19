@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="数学小乐园">
+    <meta name="apple-mobile-web-app-title" content="Math Garden">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3771/3771278.png">
     
     <title>Fun Math Garden</title>
@@ -41,13 +41,13 @@
             box-sizing: border-box;
         }
 
-        /* --- Menu Styles --- */
-        .menu-btn {
+        /* --- General Button Styles --- */
+        .action-btn {
             display: block;
             width: 100%;
             padding: 16px;
             margin: 12px 0;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             border: none;
             border-radius: 50px;
@@ -55,7 +55,38 @@
             cursor: pointer;
             transition: transform 0.1s;
         }
-        .menu-btn:active { transform: scale(0.96); }
+        .action-btn:active { transform: scale(0.96); }
+
+        /* --- Setup View Styles --- */
+        .count-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            background: #f5f5f5;
+            border-radius: 20px;
+            padding: 10px;
+        }
+        .adj-btn {
+            background: #90a4ae;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 30px;
+            font-weight: bold;
+            box-shadow: 0 4px #607d8b;
+        }
+        .adj-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #607d8b;
+        }
+        #count-display {
+            font-size: 40px;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
 
         /* --- Quiz UI Styles --- */
         .quiz-header {
@@ -111,7 +142,6 @@
             border: none;
             border-radius: 15px;
             box-shadow: 0 4px #ddd;
-            cursor: pointer;
             color: #333;
         }
         .key:active {
@@ -132,23 +162,44 @@
             width: 90px;
             font-size: 14px;
         }
+
+        /* --- Result View Styles --- */
+        .result-text {
+            font-size: 24px;
+            color: #2e7d32;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+        .highlight {
+            font-size: 32px;
+            color: var(--primary-blue);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
     <div id="menu-view" class="container">
         <h2 style="color:var(--primary-blue); margin-top:0;">🌈 数学小乐园 🌟</h2>
-        <button class="menu-btn" style="background:#81c784; box-shadow:0 5px #66bb6a;" onclick="startQuiz('add-1')">一位数加法 🍎</button>
-        <button class="menu-btn" style="background:#4fc3f7; box-shadow:0 5px #29b6f6;" onclick="startQuiz('sub-20')">20以内减法 🍬</button>
-        <button class="menu-btn" style="background:#ffa726; box-shadow:0 5px #fb8c00;" onclick="startQuiz('mixed-2')">两位数加减混合 🍀</button>
-        <button class="menu-btn" style="background:#ba68c8; box-shadow:0 5px #ab47bc;" onclick="startQuiz('add-2')">两位数加法 🚀</button>
-        <button class="menu-btn" style="background:#ef5350; box-shadow:0 5px #e53935;" onclick="startQuiz('sub-2')">两位数减法 🦁</button>
+        <button class="action-btn" style="background:#81c784; box-shadow:0 5px #66bb6a;" onclick="openSetup('single')">一位数加减法 🍎</button>
+        <button class="action-btn" style="background:#ba68c8; box-shadow:0 5px #ab47bc;" onclick="openSetup('double')">两位数加减法 🚀</button>
+    </div>
+
+    <div id="setup-view" class="container" style="display: none;">
+        <h2 style="color:#546e7a;">设定题目数量 🎯</h2>
+        <div class="count-selector">
+            <button class="adj-btn" onclick="adjustCount(-5)">-</button>
+            <span id="count-display">10</span>
+            <button class="adj-btn" onclick="adjustCount(5)">+</button>
+        </div>
+        <button class="action-btn" style="background:#4fc3f7; box-shadow:0 5px #29b6f6;" onclick="startQuiz()">开始挑战！✨</button>
+        <button class="btn-exit" style="width: 100%; font-size:18px; padding: 15px;" onclick="showView('menu-view')">返回上一步</button>
     </div>
 
     <div id="quiz-view" class="container" style="display: none;">
         <div class="quiz-header">
             <span>⏱️ <span id="timer-display">00:00</span></span>
-            <span>⭐ <span id="score-display">0</span> / <span id="total-display">0</span></span>
+            <span>⭐ <span id="score-display">0</span> / <span id="total-display">10</span></span>
         </div>
         
         <div id="question-display" class="question-box"></div>
@@ -173,79 +224,126 @@
         <button class="btn-exit" onclick="returnToMenu()">退出 🏠</button>
     </div>
 
+    <div id="result-view" class="container" style="display: none;">
+        <h2>🎉 挑战结束！🎉</h2>
+        <div class="result-text">
+            完成了 <span id="res-count" class="highlight">0</span> 道题<br><br>
+            总用时<br><span id="res-time" class="highlight">00:00</span>
+        </div>
+        <button class="action-btn" style="background:#ffb74d; box-shadow:0 5px #fb8c00; margin-top:30px;" onclick="showView('menu-view')">返回主页 🏠</button>
+    </div>
+
     <script>
+        // Global State Variables
         let currentMode = '';
+        let targetQuestionCount = 10;
+        let correctCount = 0;
         let timerInterval;
         let secondsElapsed = 0;
-        let correctFirstTryCount = 0;
-        let totalCompletedCount = 0;
         let expectedAnswer = 0;
-        let isFirstAttempt = true;
         let currentInput = "";
 
+        // Format total seconds to MM:SS
         function formatTime(totalSeconds) {
             const m = Math.floor(totalSeconds / 60);
             const s = totalSeconds % 60;
             return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
-        function startQuiz(mode) {
+        // View Controller
+        function showView(viewId) {
+            const views = ['menu-view', 'setup-view', 'quiz-view', 'result-view'];
+            views.forEach(id => {
+                document.getElementById(id).style.display = (id === viewId) ? 'block' : 'none';
+            });
+        }
+
+        // Setup Phase
+        function openSetup(mode) {
             currentMode = mode;
+            targetQuestionCount = 10; // Reset default
+            document.getElementById('count-display').innerText = targetQuestionCount;
+            showView('setup-view');
+        }
+
+        function adjustCount(delta) {
+            targetQuestionCount += delta;
+            // Bound limits between 5 and 100 questions
+            if (targetQuestionCount < 5) targetQuestionCount = 5;
+            if (targetQuestionCount > 100) targetQuestionCount = 100;
+            document.getElementById('count-display').innerText = targetQuestionCount;
+        }
+
+        // Quiz Phase
+        function startQuiz() {
+            correctCount = 0;
             secondsElapsed = 0;
-            correctFirstTryCount = 0;
-            totalCompletedCount = 0;
+            
+            document.getElementById('total-display').innerText = targetQuestionCount;
             updateStatsUI();
-            document.getElementById('menu-view').style.display = 'none';
-            document.getElementById('quiz-view').style.display = 'block';
+            showView('quiz-view');
+            
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 secondsElapsed++;
                 document.getElementById('timer-display').innerText = formatTime(secondsElapsed);
             }, 1000);
+            
             generateNextQuestion();
         }
 
+        // Generate constraints based on strict rules
         function generateNextQuestion() {
-            isFirstAttempt = true;
             currentInput = "";
             updateAnswerBox();
-            let num1, num2;
-
-            // Helper to handle logic based on mode
-            const getLogic = (mode) => {
-                let n1, n2, ans, txt;
-                if (mode === 'add-1') {
-                    n1 = getRandomInt(1, 9); n2 = getRandomInt(1, 9);
-                    ans = n1 + n2; txt = `${n1} + ${n2}`;
-                } else if (mode === 'sub-20') {
-                    n1 = getRandomInt(1, 20);
-                    let minN2 = Math.max(0, n1 - 9);
-                    n2 = getRandomInt(minN2, n1);
-                    ans = n1 - n2; txt = `${n1} - ${n2}`;
-                } else if (mode === 'add-2') {
-                    n1 = getRandomInt(10, 99); n2 = getRandomInt(10, 99);
-                    ans = n1 + n2; txt = `${n1} + ${n2}`;
-                } else if (mode === 'sub-2') {
-                    n1 = getRandomInt(10, 99); n2 = getRandomInt(10, n1);
-                    ans = n1 - n2; txt = `${n1} - ${n2}`;
-                }
-                return {ans, txt};
-            };
-
-            if (currentMode === 'mixed-2') {
-                // Randomly choose between add-2 and sub-2
-                const subMode = Math.random() < 0.5 ? 'add-2' : 'sub-2';
-                const result = getLogic(subMode);
-                expectedAnswer = result.ans;
-                displayQuestion(result.txt);
-            } else {
-                const result = getLogic(currentMode);
-                expectedAnswer = result.ans;
-                displayQuestion(result.txt);
-            }
             document.getElementById('feedback-display').innerText = '';
+
+            let num1, num2, ans, isAdd;
+            isAdd = Math.random() < 0.5;
+
+            if (currentMode === 'single') {
+                if (isAdd) {
+                    // Single addition: Both addends are single digits (1-9)
+                    num1 = getRandomInt(1, 9);
+                    num2 = getRandomInt(1, 9);
+                    ans = num1 + num2;
+                    expectedAnswer = ans;
+                    displayQuestion(`${num1} + ${num2}`);
+                } else {
+                    // Single subtraction: Subtrahend and difference are single digits (0-9)
+                    // We generate the subtrahend (num2) and difference (ans) first to ensure constraints
+                    num2 = getRandomInt(1, 9);
+                    ans = getRandomInt(0, 9);
+                    num1 = num2 + ans; // Minuend is derived
+                    expectedAnswer = ans;
+                    displayQuestion(`${num1} - ${num2}`);
+                }
+            } else if (currentMode === 'double') {
+                if (isAdd) {
+                    // Double addition: Both addends are double digits (10-99)
+                    num1 = getRandomInt(10, 99);
+                    num2 = getRandomInt(10, 99);
+                    ans = num1 + num2;
+                    expectedAnswer = ans;
+                    displayQuestion(`${num1} + ${num2}`);
+                } else {
+                    // Double subtraction: Minuend and subtrahend are double digits, diff >= 0
+                    num1 = getRandomInt(10, 99);
+                    num2 = getRandomInt(10, 99);
+                    // Ensure result is not negative
+                    if (num1 < num2) {
+                        let temp = num1;
+                        num1 = num2;
+                        num2 = temp;
+                    }
+                    ans = num1 - num2;
+                    expectedAnswer = ans;
+                    displayQuestion(`${num1} - ${num2}`);
+                }
+            }
         }
 
+        // Keypad Interaction
         function pressKey(val) {
             if (val === 'DEL') {
                 currentInput = currentInput.slice(0, -1);
@@ -259,19 +357,26 @@
             document.getElementById('answer-box').innerText = currentInput || "?";
         }
 
+        // Check Logic
         function checkAnswer() {
             if (currentInput === "") return;
             const userAnswer = parseInt(currentInput, 10);
             const feedback = document.getElementById('feedback-display');
 
             if (userAnswer === expectedAnswer) {
-                totalCompletedCount++;
-                if (isFirstAttempt) correctFirstTryCount++;
-                feedback.innerHTML = "<span style='color:#43a047'>太棒了！🎉</span>";
+                correctCount++;
                 updateStatsUI();
-                setTimeout(generateNextQuestion, 800);
+                
+                if (correctCount >= targetQuestionCount) {
+                    // Finish Quiz
+                    clearInterval(timerInterval);
+                    setTimeout(showResult, 300); // Small delay before transition
+                } else {
+                    // Correct! Auto jump to next question immediately
+                    generateNextQuestion();
+                }
             } else {
-                isFirstAttempt = false;
+                // Incorrect
                 feedback.innerHTML = "<span style='color:#e53935'>不对哦，再试一次！💪</span>";
                 currentInput = "";
                 updateAnswerBox();
@@ -279,19 +384,24 @@
         }
 
         function updateStatsUI() {
-            document.getElementById('score-display').innerText = correctFirstTryCount;
-            document.getElementById('total-display').innerText = totalCompletedCount;
+            document.getElementById('score-display').innerText = correctCount;
             document.getElementById('timer-display').innerText = formatTime(secondsElapsed);
         }
 
+        function showResult() {
+            document.getElementById('res-count').innerText = targetQuestionCount;
+            document.getElementById('res-time').innerText = formatTime(secondsElapsed);
+            showView('result-view');
+        }
+
         function returnToMenu() {
-            if (confirm("要结束练习吗？")) {
+            if (confirm("要结束练习吗？进度将不会被保存。")) {
                 clearInterval(timerInterval);
-                document.getElementById('menu-view').style.display = 'block';
-                document.getElementById('quiz-view').style.display = 'none';
+                showView('menu-view');
             }
         }
 
+        // Utility: Generate random integer inclusive [min, max]
         function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
